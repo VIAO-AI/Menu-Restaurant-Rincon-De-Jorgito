@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -17,14 +16,13 @@ const Footer: React.FC = () => {
           <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-8">
             <div>
               <h3 className="font-semibold mb-2">{translate('contact')}</h3>
-              <p className="text-sm text-peru-beige/80">+1 (555) 123-4567</p>
-              <p className="text-sm text-peru-beige/80">info@sabrosuraperu.com</p>
+              <p className="text-sm text-peru-beige/80">(415) 609-5160</p>
             </div>
             
             <div>
               <h3 className="font-semibold mb-2">{translate('about')}</h3>
-              <p className="text-sm text-peru-beige/80">123 Main Street</p>
-              <p className="text-sm text-peru-beige/80">New York, NY 10001</p>
+              <p className="text-sm text-peru-beige/80">1850 Cesar Chavez St</p>
+              <p className="text-sm text-peru-beige/80">San Francisco, CA 94107</p>
             </div>
           </div>
         </div>
