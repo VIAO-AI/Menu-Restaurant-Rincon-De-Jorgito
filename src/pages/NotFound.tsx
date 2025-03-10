@@ -1,8 +1,11 @@
+
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const NotFound = () => {
   const location = useLocation();
+  const { translate } = useLanguage();
 
   useEffect(() => {
     console.error(
@@ -12,12 +15,17 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">Oops! Page not found</p>
-        <a href="/" className="text-blue-500 hover:text-blue-700 underline">
-          Return to Home
+    <div className="min-h-screen flex items-center justify-center bg-peru-beige/30 hero-pattern">
+      <div className="text-center max-w-md px-6">
+        <h1 className="text-5xl font-title font-bold text-peru-red mb-4 animate-fade-in">404</h1>
+        <p className="text-xl text-peru-brown mb-6 animate-fade-in">
+          Oops! Página no encontrada
+        </p>
+        <a 
+          href="/" 
+          className="inline-block px-6 py-3 bg-peru-gold text-white rounded-lg shadow-md hover:bg-peru-ochre transition-colors duration-300 animate-fade-in"
+        >
+          Volver al Inicio
         </a>
       </div>
     </div>
