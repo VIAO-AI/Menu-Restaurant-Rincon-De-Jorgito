@@ -11,7 +11,7 @@ interface LanguageContextType {
 
 const translations = {
   en: {
-    "appName": "Sabrosura Peruana",
+    "appName": "El Rincón de Jorgito",
     "tagline": "Authentic Peruvian Cuisine",
     "allCategories": "All Categories",
     "peruvianDrinks": "Peruvian Drinks",
