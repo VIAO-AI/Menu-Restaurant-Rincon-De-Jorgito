@@ -28,10 +28,10 @@ const translations = {
     "languages": "Languages",
     "english": "English",
     "spanish": "Spanish",
-    "footer": "© 2023 Sabrosura Peruana. All rights reserved.",
+    "footer": "© 2025 El Rincón de Jorgito. All Rights Reserved. ❤️ Designed and developed by Angel Nerozzi ❤️",
   },
   es: {
-    "appName": "Sabrosura Peruana",
+    "appName": "El Rincón de Jorgito",
     "tagline": "Auténtica Cocina Peruana",
     "allCategories": "Todas las Categorías",
     "peruvianDrinks": "Bebidas Peruanas",
@@ -48,7 +48,7 @@ const translations = {
     "languages": "Idiomas",
     "english": "Inglés",
     "spanish": "Español",
-    "footer": "© 2023 Sabrosura Peruana. Todos los derechos reservados.",
+    "footer": "© 2025 El Rincón de Jorgito. All Rights Reserved. ❤️ Designed and developed by Angel Nerozzi ❤️",
   }
 };
 
