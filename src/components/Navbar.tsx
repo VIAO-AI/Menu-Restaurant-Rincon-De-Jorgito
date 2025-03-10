@@ -10,7 +10,7 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 rounded-full bg-peru-red flex items-center justify-center">
-            <span className="text-white font-bold text-xl">S</span>
+            <span className="text-white font-bold text-xl">R</span>
           </div>
           <span className="font-title text-2xl font-bold text-peru-brown">{translate('appName')}</span>
         </div>
