@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type Language = 'en' | 'es';
@@ -11,7 +10,7 @@ interface LanguageContextType {
 
 const translations = {
   en: {
-    "appName": "El Rincón de Jorgito",
+    "appName": "Menu - El Rincón De Jorgito",
     "tagline": "Authentic Peruvian Cuisine",
     "allCategories": "All Categories",
     "peruvianDrinks": "Peruvian Drinks",
@@ -31,7 +30,7 @@ const translations = {
     "footer": "© 2025 El Rincón de Jorgito. All Rights Reserved. ❤️ Designed and developed by Angel Nerozzi ❤️",
   },
   es: {
-    "appName": "El Rincón de Jorgito",
+    "appName": "Menu - El Rincón De Jorgito",
     "tagline": "Auténtica Cocina Peruana",
     "allCategories": "Todas las Categorías",
     "peruvianDrinks": "Bebidas Peruanas",
@@ -48,7 +47,7 @@ const translations = {
     "languages": "Idiomas",
     "english": "Inglés",
     "spanish": "Español",
-    "footer": "© 2025 El Rincón de Jorgito. All Rights Reserved. ❤️ Designed and developed by Angel Nerozzi ❤️",
+    "footer": "© 2025 El Rincón de Jorgito. Todos los derechos reservados. ❤️ Designed and developed by Angel Nerozzi ❤️",
   }
 };
 
