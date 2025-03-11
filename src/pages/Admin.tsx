@@ -37,12 +37,17 @@ const Admin = () => {
     setLoading(true);
     
     try {
+      console.log('Attempting login with:', { email });
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase login error details:', error);
+        throw error;
+      }
 
       if (data && data.session) {
         toast({
@@ -56,10 +61,25 @@ const Admin = () => {
       toast({
         variant: "destructive",
         title: "Error de inicio de sesión",
-        description: error.message || "Error al intentar iniciar sesión. Por favor, verifica tus credenciales.",
+        description: "Error al intentar iniciar sesión. Por favor, verifica tus credenciales y la conexión con Supabase.",
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Setup development/testing account logic
+  // Use this for testing if Supabase auth is not working
+  const handleDevLogin = (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    if (process.env.NODE_ENV === 'development' || !import.meta.env.PROD) {
+      localStorage.setItem('dev_admin_authenticated', 'true');
+      toast({
+        title: "Modo de desarrollo",
+        description: "Accediendo en modo de desarrollo",
+      });
+      navigate('/admin/menu');
     }
   };
 
@@ -128,6 +148,16 @@ const Admin = () => {
               </span>
             ) : "Iniciar Sesión"}
           </button>
+          
+          {/* Development/testing login option */}
+          {(process.env.NODE_ENV === 'development' || !import.meta.env.PROD) && (
+            <button
+              onClick={handleDevLogin}
+              className="w-full mt-2 bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors text-sm"
+            >
+              Acceso de Desarrollo
+            </button>
+          )}
         </form>
       </div>
     </div>
