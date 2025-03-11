@@ -3,15 +3,19 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/context/LanguageContext';
 
 const Admin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { translate } = useLanguage();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -23,8 +27,8 @@ const Admin = () => {
 
       if (data) {
         toast({
-          title: "Login successful",
-          description: "Welcome to the admin panel!",
+          title: "Inicio de sesión exitoso",
+          description: "¡Bienvenido al panel de administración!",
         });
         navigate('/admin/menu');
       }
@@ -34,18 +38,28 @@ const Admin = () => {
         title: "Error",
         description: error.message,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-peru-beige/10">
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
-        <h1 className="text-2xl font-title text-peru-brown mb-6 text-center">Admin Login</h1>
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center space-x-2 mb-2">
+            <div className="w-8 h-8 rounded-full bg-peru-red flex items-center justify-center">
+              <span className="text-white font-bold text-xl">R</span>
+            </div>
+            <span className="font-title text-2xl font-bold text-peru-brown">El Rincón De Jorgito</span>
+          </div>
+          <h1 className="text-xl font-title text-peru-brown">Panel de Administración</h1>
+        </div>
         
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+              Correo Electrónico
             </label>
             <input
               id="email"
@@ -59,7 +73,7 @@ const Admin = () => {
           
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
+              Contraseña
             </label>
             <input
               id="password"
@@ -73,9 +87,10 @@ const Admin = () => {
           
           <button
             type="submit"
-            className="w-full bg-peru-red text-white py-2 px-4 rounded-md hover:bg-peru-terracotta transition-colors"
+            disabled={loading}
+            className="w-full bg-peru-red text-white py-2 px-4 rounded-md hover:bg-peru-terracotta transition-colors disabled:opacity-70"
           >
-            Login
+            {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
           </button>
         </form>
       </div>

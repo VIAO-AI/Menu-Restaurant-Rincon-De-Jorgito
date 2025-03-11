@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { Link } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
   const { language, setLanguage, translate } = useLanguage();
@@ -38,6 +39,10 @@ const Navbar: React.FC = () => {
               {translate('spanish')}
             </button>
           </div>
+          
+          <Link to="/admin" className="ml-4 text-sm text-peru-brown hover:text-peru-red transition-colors duration-300">
+            Admin
+          </Link>
         </div>
       </div>
     </nav>
