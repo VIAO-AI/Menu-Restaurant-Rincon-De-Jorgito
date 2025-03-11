@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
-import { supabase, isAuthenticated } from '@/lib/supabase';
-import { MenuItem } from '@/data/menuData';
 import { Plus, Edit, Trash, Loader2, LogOut } from 'lucide-react';
+import type { MenuItem } from '@/types/menu';
 
 const AdminMenu = () => {
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -14,109 +13,52 @@ const AdminMenu = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    checkAuth();
-    fetchMenuItems();
-    
-    // Set up real-time subscription
-    const subscription = supabase
-      .channel('menu_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'menu_items'
-      }, (payload) => {
-        console.log('Real-time update:', payload);
-        fetchMenuItems();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(subscription);
-    };
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      // First check Supabase auth
-      const authenticated = await isAuthenticated();
-      
-      // Then check dev mode auth if Supabase auth failed
-      const devAuthenticated = localStorage.getItem('dev_admin_authenticated') === 'true';
-      
-      if (!authenticated && !devAuthenticated) {
-        toast({
-          variant: "destructive",
-          title: "Sesión no válida",
-          description: "Por favor, inicie sesión para acceder al panel de administración",
-        });
-        navigate('/admin');
-      }
-    } catch (error) {
-      console.error('Error checking authentication:', error);
-      
-      // Check dev mode auth as fallback
-      const devAuthenticated = localStorage.getItem('dev_admin_authenticated') === 'true';
-      if (!devAuthenticated) {
-        navigate('/admin');
-      }
+    const isAuthenticated = localStorage.getItem('dev_admin_authenticated');
+    if (!isAuthenticated) {
+      navigate('/admin');
+      return;
     }
-  };
+    fetchMenuItems();
+  }, [navigate]);
 
   const fetchMenuItems = async () => {
     try {
       setLoading(true);
       
-      // Try to fetch from Supabase
-      const { data, error } = await supabase
-        .from('menu_items')
-        .select('*');
-
-      if (error) {
-        console.error('Supabase fetch error:', error);
-        
-        // If Supabase fails, use mock data for development/demo
-        if (localStorage.getItem('dev_admin_authenticated') === 'true') {
-          // Mock data for development/demo
-          const mockData: MenuItem[] = [
-            {
-              id: '1',
-              name: { en: 'Lomo Saltado', es: 'Lomo Saltado' },
-              description: { 
-                en: 'Stir-fried beef with onions, tomatoes and french fries', 
-                es: 'Carne de res salteada con cebollas, tomates y papas fritas' 
-              },
-              price: '$15.99',
-              category: 'mainDish',
-              isPopular: true,
-              isVegetarian: false,
-              ingredients: ['beef', 'onions', 'tomatoes', 'soy sauce', 'french fries'],
-              image: '/placeholder.svg'
-            },
-            {
-              id: '2',
-              name: { en: 'Ceviche', es: 'Ceviche' },
-              description: { 
-                en: 'Fresh fish cured in citrus juices with onions and chili peppers', 
-                es: 'Pescado fresco curado en jugos cítricos con cebollas y ajíes' 
-              },
-              price: '$14.99',
-              category: 'coldDishes',
-              isPopular: true,
-              isVegetarian: false,
-              ingredients: ['fish', 'lime juice', 'onions', 'cilantro', 'chili peppers'],
-              image: '/placeholder.svg'
-            }
-          ];
-          
-          setItems(mockData);
-          toast({
-            title: "Modo de desarrollo",
-            description: "Usando datos de muestra para desarrollo",
-          });
+      // En modo desarrollo, usamos datos de muestra
+      const mockData: MenuItem[] = [
+        {
+          id: '1',
+          name: { en: 'Lomo Saltado', es: 'Lomo Saltado' },
+          description: { 
+            en: 'Stir-fried beef with onions, tomatoes and french fries', 
+            es: 'Carne de res salteada con cebollas, tomates y papas fritas' 
+          },
+          price: '$15.99',
+          category: 'mainDish',
+          isPopular: true,
+          isVegetarian: false,
+          ingredients: ['beef', 'onions', 'tomatoes', 'soy sauce', 'french fries'],
+          image: '/placeholder.svg'
+        },
+        {
+          id: '2',
+          name: { en: 'Ceviche', es: 'Ceviche' },
+          description: { 
+            en: 'Fresh fish cured in citrus juices with onions and chili peppers', 
+            es: 'Pescado fresco curado en jugos cítricos con cebollas y ajíes' 
+          },
+          price: '$14.99',
+          category: 'coldDishes',
+          isPopular: true,
+          isVegetarian: false,
+          ingredients: ['fish', 'lime juice', 'onions', 'cilantro', 'chili peppers'],
+          image: '/placeholder.svg'
         }
-      } else {
-        setItems(data || []);
-      }
+      ];
+      
+      setItems(mockData);
+      
     } catch (error: any) {
       console.error('Error fetching menu items:', error);
       toast({
@@ -124,13 +66,6 @@ const AdminMenu = () => {
         title: "Error al cargar elementos del menú",
         description: error.message,
       });
-      
-      // Use mock data if in development mode
-      if (localStorage.getItem('dev_admin_authenticated') === 'true') {
-        setItems([
-          // Mock data would go here - same as above
-        ]);
-      }
     } finally {
       setLoading(false);
     }
@@ -140,30 +75,14 @@ const AdminMenu = () => {
     try {
       setLoading(true);
       
-      // Try to update in Supabase
-      const { error } = await supabase
-        .from('menu_items')
-        .update(updates)
-        .eq('id', id);
-
-      if (error) {
-        console.error('Supabase update error:', error);
-        
-        // In development mode, simulate successful update
-        if (localStorage.getItem('dev_admin_authenticated') === 'true') {
-          // Just update local state for demo purposes
-          setItems(items.map(item => item.id === id ? { ...item, ...updates } : item));
-        } else {
-          throw error;
-        }
-      }
-
+      // En modo desarrollo, actualizamos el estado local
+      setItems(items.map(item => item.id === id ? { ...item, ...updates } : item));
+      
       toast({
         title: "Éxito",
         description: "Elemento del menú actualizado correctamente",
       });
       
-      fetchMenuItems();
       setIsEditing(false);
       setSelectedItem(null);
     } catch (error: any) {
@@ -183,30 +102,13 @@ const AdminMenu = () => {
     try {
       setLoading(true);
       
-      // Try to delete in Supabase
-      const { error } = await supabase
-        .from('menu_items')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error('Supabase delete error:', error);
-        
-        // In development mode, simulate successful delete
-        if (localStorage.getItem('dev_admin_authenticated') === 'true') {
-          // Just update local state for demo purposes
-          setItems(items.filter(item => item.id !== id));
-        } else {
-          throw error;
-        }
-      }
-
+      // En modo desarrollo, eliminamos del estado local
+      setItems(items.filter(item => item.id !== id));
+      
       toast({
         title: "Éxito",
         description: "Elemento del menú eliminado correctamente",
       });
-      
-      fetchMenuItems();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -218,32 +120,14 @@ const AdminMenu = () => {
     }
   };
 
-  const signOut = async () => {
-    try {
-      // Try Supabase sign out
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      // Always clear local storage auth
-      localStorage.removeItem('dev_admin_authenticated');
-      
-      toast({
-        title: "Sesión cerrada",
-        description: "Ha cerrado sesión correctamente",
-      });
-      navigate('/admin');
-    } catch (error: any) {
-      console.error('Sign out error:', error);
-      
-      // Ensure local storage is cleared even if Supabase fails
-      localStorage.removeItem('dev_admin_authenticated');
-      
-      toast({
-        title: "Sesión cerrada",
-        description: "Ha cerrado sesión correctamente",
-      });
-      navigate('/admin');
-    }
+  const signOut = () => {
+    localStorage.removeItem('dev_admin_authenticated');
+    localStorage.removeItem('dev_admin_email');
+    toast({
+      title: "Sesión cerrada",
+      description: "Ha cerrado sesión correctamente",
+    });
+    navigate('/admin');
   };
 
   if (loading && items.length === 0) {
@@ -283,7 +167,6 @@ const AdminMenu = () => {
           <button
             className="bg-peru-red text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-peru-terracotta transition-colors"
             onClick={() => {
-              // Implementar modal o página para agregar nuevo elemento
               toast({
                 title: "Próximamente",
                 description: "Funcionalidad en desarrollo",
@@ -355,7 +238,6 @@ const AdminMenu = () => {
               </button>
               <button
                 onClick={() => {
-                  // Implementar lógica de guardar cambios
                   setIsEditing(false);
                   setSelectedItem(null);
                 }}

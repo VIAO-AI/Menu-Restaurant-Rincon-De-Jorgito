@@ -2,34 +2,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
-import { supabase, isAuthenticated } from '@/lib/supabase';
-import { useLanguage } from '@/context/LanguageContext';
 import { Loader2 } from 'lucide-react';
 
 const Admin = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { translate } = useLanguage();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const authenticated = await isAuthenticated();
-        if (authenticated) {
-          navigate('/admin/menu');
-        }
-      } catch (error) {
-        console.error('Error checking authentication:', error);
-      } finally {
-        setCheckingAuth(false);
-      }
-    };
-
-    checkAuth();
+    const isAuthenticated = localStorage.getItem('dev_admin_authenticated');
+    if (isAuthenticated === 'true') {
+      navigate('/admin/menu');
+    }
   }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -37,62 +22,29 @@ const Admin = () => {
     setLoading(true);
     
     try {
-      console.log('Attempting login with:', { email });
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        console.error('Supabase login error details:', error);
-        throw error;
-      }
-
-      if (data && data.session) {
+      if (email.trim()) {
+        localStorage.setItem('dev_admin_authenticated', 'true');
+        localStorage.setItem('dev_admin_email', email);
+        
         toast({
           title: "Inicio de sesión exitoso",
           description: "¡Bienvenido al panel de administración!",
         });
         navigate('/admin/menu');
+      } else {
+        throw new Error('El correo electrónico es requerido');
       }
     } catch (error: any) {
       console.error('Login error:', error);
       toast({
         variant: "destructive",
         title: "Error de inicio de sesión",
-        description: "Error al intentar iniciar sesión. Por favor, verifica tus credenciales y la conexión con Supabase.",
+        description: error.message || "Error al intentar iniciar sesión",
       });
     } finally {
       setLoading(false);
     }
   };
-
-  // Setup development/testing account logic
-  // Use this for testing if Supabase auth is not working
-  const handleDevLogin = (e: React.MouseEvent) => {
-    e.preventDefault();
-    
-    if (process.env.NODE_ENV === 'development' || !import.meta.env.PROD) {
-      localStorage.setItem('dev_admin_authenticated', 'true');
-      toast({
-        title: "Modo de desarrollo",
-        description: "Accediendo en modo de desarrollo",
-      });
-      navigate('/admin/menu');
-    }
-  };
-
-  if (checkingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-peru-beige/10">
-        <div className="flex flex-col items-center">
-          <Loader2 className="h-8 w-8 text-peru-red animate-spin" />
-          <p className="mt-2 text-peru-brown">Verificando sesión...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-peru-beige/10">
@@ -122,20 +74,6 @@ const Admin = () => {
             />
           </div>
           
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Contraseña
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-peru-red"
-              required
-            />
-          </div>
-          
           <button
             type="submit"
             disabled={loading}
@@ -148,16 +86,6 @@ const Admin = () => {
               </span>
             ) : "Iniciar Sesión"}
           </button>
-          
-          {/* Development/testing login option */}
-          {(process.env.NODE_ENV === 'development' || !import.meta.env.PROD) && (
-            <button
-              onClick={handleDevLogin}
-              className="w-full mt-2 bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors text-sm"
-            >
-              Acceso de Desarrollo
-            </button>
-          )}
         </form>
       </div>
     </div>
