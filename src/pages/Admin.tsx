@@ -1,17 +1,36 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/lib/supabase';
+import { supabase, isAuthenticated } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
+import { Loader2 } from 'lucide-react';
 
 const Admin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { translate } = useLanguage();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const authenticated = await isAuthenticated();
+        if (authenticated) {
+          navigate('/admin/menu');
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +44,7 @@ const Admin = () => {
 
       if (error) throw error;
 
-      if (data) {
+      if (data && data.session) {
         toast({
           title: "Inicio de sesión exitoso",
           description: "¡Bienvenido al panel de administración!",
@@ -33,15 +52,27 @@ const Admin = () => {
         navigate('/admin/menu');
       }
     } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message,
+        title: "Error de inicio de sesión",
+        description: error.message || "Error al intentar iniciar sesión. Por favor, verifica tus credenciales.",
       });
     } finally {
       setLoading(false);
     }
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-peru-beige/10">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 text-peru-red animate-spin" />
+          <p className="mt-2 text-peru-brown">Verificando sesión...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-peru-beige/10">
@@ -90,7 +121,12 @@ const Admin = () => {
             disabled={loading}
             className="w-full bg-peru-red text-white py-2 px-4 rounded-md hover:bg-peru-terracotta transition-colors disabled:opacity-70"
           >
-            {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
+            {loading ? (
+              <span className="flex items-center justify-center">
+                <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                Iniciando sesión...
+              </span>
+            ) : "Iniciar Sesión"}
           </button>
         </form>
       </div>

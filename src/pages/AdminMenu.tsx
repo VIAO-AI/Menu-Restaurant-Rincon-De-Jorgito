@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/lib/supabase';
+import { supabase, isAuthenticated } from '@/lib/supabase';
 import { MenuItem } from '@/data/menuData';
-import { Plus, Edit, Trash } from 'lucide-react';
+import { Plus, Edit, Trash, Loader2, LogOut } from 'lucide-react';
 
 const AdminMenu = () => {
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -17,17 +17,45 @@ const AdminMenu = () => {
   useEffect(() => {
     checkAuth();
     fetchMenuItems();
+    
+    // Set up real-time subscription
+    const subscription = supabase
+      .channel('menu_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'menu_items'
+      }, (payload) => {
+        console.log('Real-time update:', payload);
+        fetchMenuItems();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, []);
 
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    try {
+      const authenticated = await isAuthenticated();
+      if (!authenticated) {
+        toast({
+          variant: "destructive",
+          title: "Sesión no válida",
+          description: "Por favor, inicie sesión para acceder al panel de administración",
+        });
+        navigate('/admin');
+      }
+    } catch (error) {
+      console.error('Error checking authentication:', error);
       navigate('/admin');
     }
   };
 
   const fetchMenuItems = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('menu_items')
         .select('*');
@@ -36,6 +64,7 @@ const AdminMenu = () => {
 
       setItems(data || []);
     } catch (error: any) {
+      console.error('Error fetching menu items:', error);
       toast({
         variant: "destructive",
         title: "Error al cargar elementos del menú",
@@ -108,6 +137,10 @@ const AdminMenu = () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      toast({
+        title: "Sesión cerrada",
+        description: "Ha cerrado sesión correctamente",
+      });
       navigate('/admin');
     } catch (error: any) {
       toast({
@@ -121,7 +154,10 @@ const AdminMenu = () => {
   if (loading && items.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-peru-beige/10">
-        <div className="text-peru-brown">Cargando...</div>
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 text-peru-red animate-spin" />
+          <p className="mt-2 text-peru-brown">Cargando elementos del menú...</p>
+        </div>
       </div>
     );
   }
@@ -138,8 +174,9 @@ const AdminMenu = () => {
           </div>
           <button
             onClick={signOut}
-            className="bg-peru-red text-white px-4 py-2 rounded hover:bg-peru-terracotta transition-colors"
+            className="bg-peru-red text-white px-4 py-2 rounded hover:bg-peru-terracotta transition-colors flex items-center gap-2"
           >
+            <LogOut size={16} />
             Cerrar Sesión
           </button>
         </div>
@@ -185,7 +222,6 @@ const AdminMenu = () => {
                 <div className="flex justify-end space-x-2">
                   <button
                     onClick={() => {
-                      // Implementar edición
                       setSelectedItem(item);
                       setIsEditing(true);
                     }}
@@ -206,9 +242,9 @@ const AdminMenu = () => {
         )}
       </div>
 
-      {/* Aquí se puede implementar un modal de edición más adelante */}
+      {/* Modal de edición */}
       {isEditing && selectedItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-title text-peru-brown mb-4">Editar elemento</h2>
             {/* Formulario de edición aquí */}
