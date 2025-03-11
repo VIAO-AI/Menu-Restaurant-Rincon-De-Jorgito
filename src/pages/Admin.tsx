@@ -11,7 +11,7 @@ const Admin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('dev_admin_authenticated');
+    const isAuthenticated = localStorage.getItem('admin_authenticated');
     if (isAuthenticated === 'true') {
       navigate('/admin/menu');
     }
@@ -23,8 +23,8 @@ const Admin = () => {
     
     try {
       if (email.trim()) {
-        localStorage.setItem('dev_admin_authenticated', 'true');
-        localStorage.setItem('dev_admin_email', email);
+        localStorage.setItem('admin_authenticated', 'true');
+        localStorage.setItem('admin_email', email);
         
         toast({
           title: "Inicio de sesión exitoso",

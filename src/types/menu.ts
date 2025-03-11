@@ -16,3 +16,4 @@ export interface MenuItem {
   ingredients?: string[];
   image?: string;
 }
+

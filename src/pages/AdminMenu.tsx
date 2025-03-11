@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -9,11 +10,20 @@ const AdminMenu = () => {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<Partial<MenuItem>>({
+    name: { en: '', es: '' },
+    description: { en: '', es: '' },
+    price: '',
+    category: '',
+    isPopular: false,
+    isVegetarian: false,
+    ingredients: [],
+  });
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('dev_admin_authenticated');
+    const isAuthenticated = localStorage.getItem('admin_authenticated');
     if (!isAuthenticated) {
       navigate('/admin');
       return;
@@ -24,46 +34,15 @@ const AdminMenu = () => {
   const fetchMenuItems = async () => {
     try {
       setLoading(true);
-      
-      // En modo desarrollo, usamos datos de muestra
-      const mockData: MenuItem[] = [
-        {
-          id: '1',
-          name: { en: 'Lomo Saltado', es: 'Lomo Saltado' },
-          description: { 
-            en: 'Stir-fried beef with onions, tomatoes and french fries', 
-            es: 'Carne de res salteada con cebollas, tomates y papas fritas' 
-          },
-          price: '$15.99',
-          category: 'mainDish',
-          isPopular: true,
-          isVegetarian: false,
-          ingredients: ['beef', 'onions', 'tomatoes', 'soy sauce', 'french fries'],
-          image: '/placeholder.svg'
-        },
-        {
-          id: '2',
-          name: { en: 'Ceviche', es: 'Ceviche' },
-          description: { 
-            en: 'Fresh fish cured in citrus juices with onions and chili peppers', 
-            es: 'Pescado fresco curado en jugos cítricos con cebollas y ajíes' 
-          },
-          price: '$14.99',
-          category: 'coldDishes',
-          isPopular: true,
-          isVegetarian: false,
-          ingredients: ['fish', 'lime juice', 'onions', 'cilantro', 'chili peppers'],
-          image: '/placeholder.svg'
-        }
-      ];
-      
-      setItems(mockData);
-      
+      const storedItems = localStorage.getItem('menu_items');
+      if (storedItems) {
+        setItems(JSON.parse(storedItems));
+      }
     } catch (error: any) {
       console.error('Error fetching menu items:', error);
       toast({
         variant: "destructive",
-        title: "Error al cargar elementos del menú",
+        title: "Error al cargar el menú",
         description: error.message,
       });
     } finally {
@@ -74,9 +53,11 @@ const AdminMenu = () => {
   const handleUpdateItem = async (id: string, updates: Partial<MenuItem>) => {
     try {
       setLoading(true);
-      
-      // En modo desarrollo, actualizamos el estado local
-      setItems(items.map(item => item.id === id ? { ...item, ...updates } : item));
+      const updatedItems = items.map(item => 
+        item.id === id ? { ...item, ...updates } : item
+      );
+      setItems(updatedItems);
+      localStorage.setItem('menu_items', JSON.stringify(updatedItems));
       
       toast({
         title: "Éxito",
@@ -85,10 +66,57 @@ const AdminMenu = () => {
       
       setIsEditing(false);
       setSelectedItem(null);
+      setFormData({
+        name: { en: '', es: '' },
+        description: { en: '', es: '' },
+        price: '',
+        category: '',
+        isPopular: false,
+        isVegetarian: false,
+        ingredients: [],
+      });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error al actualizar el elemento del menú",
+        title: "Error al actualizar el elemento",
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddItem = async () => {
+    try {
+      setLoading(true);
+      const newItem: MenuItem = {
+        id: Date.now().toString(),
+        ...formData as MenuItem
+      };
+      
+      const updatedItems = [...items, newItem];
+      setItems(updatedItems);
+      localStorage.setItem('menu_items', JSON.stringify(updatedItems));
+      
+      toast({
+        title: "Éxito",
+        description: "Nuevo elemento añadido al menú",
+      });
+      
+      setIsEditing(false);
+      setFormData({
+        name: { en: '', es: '' },
+        description: { en: '', es: '' },
+        price: '',
+        category: '',
+        isPopular: false,
+        isVegetarian: false,
+        ingredients: [],
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error al añadir el elemento",
         description: error.message,
       });
     } finally {
@@ -101,18 +129,18 @@ const AdminMenu = () => {
     
     try {
       setLoading(true);
-      
-      // En modo desarrollo, eliminamos del estado local
-      setItems(items.filter(item => item.id !== id));
+      const updatedItems = items.filter(item => item.id !== id);
+      setItems(updatedItems);
+      localStorage.setItem('menu_items', JSON.stringify(updatedItems));
       
       toast({
         title: "Éxito",
-        description: "Elemento del menú eliminado correctamente",
+        description: "Elemento eliminado correctamente",
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error al eliminar el elemento del menú",
+        title: "Error al eliminar el elemento",
         description: error.message,
       });
     } finally {
@@ -121,8 +149,8 @@ const AdminMenu = () => {
   };
 
   const signOut = () => {
-    localStorage.removeItem('dev_admin_authenticated');
-    localStorage.removeItem('dev_admin_email');
+    localStorage.removeItem('admin_authenticated');
+    localStorage.removeItem('admin_email');
     toast({
       title: "Sesión cerrada",
       description: "Ha cerrado sesión correctamente",
@@ -166,12 +194,7 @@ const AdminMenu = () => {
           <h1 className="text-2xl font-title text-peru-brown">Gestión del Menú</h1>
           <button
             className="bg-peru-red text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-peru-terracotta transition-colors"
-            onClick={() => {
-              toast({
-                title: "Próximamente",
-                description: "Funcionalidad en desarrollo",
-              });
-            }}
+            onClick={() => setIsEditing(true)}
           >
             <Plus size={18} /> Añadir Elemento
           </button>
@@ -187,20 +210,21 @@ const AdminMenu = () => {
               <div key={item.id} className="bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h3 className="font-title text-lg text-peru-brown">{item.name.en}</h3>
+                    <h3 className="font-title text-lg text-peru-brown">{item.name.es}</h3>
                     <p className="text-sm text-gray-500">{item.category}</p>
                   </div>
                   <div className="text-peru-ochre font-semibold">{item.price}</div>
                 </div>
                 
                 <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                  {item.description.en}
+                  {item.description.es}
                 </p>
                 
                 <div className="flex justify-end space-x-2">
                   <button
                     onClick={() => {
                       setSelectedItem(item);
+                      setFormData(item);
                       setIsEditing(true);
                     }}
                     className="text-peru-red hover:text-peru-terracotta transition-colors flex items-center gap-1"
@@ -221,29 +245,165 @@ const AdminMenu = () => {
       </div>
 
       {/* Modal de edición */}
-      {isEditing && selectedItem && (
+      {isEditing && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-title text-peru-brown mb-4">Editar elemento</h2>
-            {/* Formulario de edición aquí */}
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+            <h2 className="text-xl font-title text-peru-brown mb-4">
+              {selectedItem ? 'Editar elemento' : 'Añadir nuevo elemento'}
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre (Español)
+                </label>
+                <input
+                  type="text"
+                  value={formData.name?.es || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    name: { ...formData.name, es: e.target.value }
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre (English)
+                </label>
+                <input
+                  type="text"
+                  value={formData.name?.en || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    name: { ...formData.name, en: e.target.value }
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Descripción (Español)
+                </label>
+                <textarea
+                  value={formData.description?.es || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    description: { ...formData.description, es: e.target.value }
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  rows={3}
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Descripción (English)
+                </label>
+                <textarea
+                  value={formData.description?.en || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    description: { ...formData.description, en: e.target.value }
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  rows={3}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Precio
+                </label>
+                <input
+                  type="text"
+                  value={formData.price || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    price: e.target.value
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Categoría
+                </label>
+                <select
+                  value={formData.category || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    category: e.target.value
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">Seleccionar categoría</option>
+                  <option value="starters">Entradas</option>
+                  <option value="mainDish">Plato Principal</option>
+                  <option value="desserts">Postres</option>
+                  <option value="drinks">Bebidas</option>
+                </select>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.isPopular || false}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      isPopular: e.target.checked
+                    })}
+                    className="rounded border-gray-300"
+                  />
+                  <span className="text-sm text-gray-700">Popular</span>
+                </label>
+                
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.isVegetarian || false}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      isVegetarian: e.target.checked
+                    })}
+                    className="rounded border-gray-300"
+                  />
+                  <span className="text-sm text-gray-700">Vegetariano</span>
+                </label>
+              </div>
+            </div>
+            
             <div className="flex justify-end space-x-3 mt-6">
               <button
                 onClick={() => {
                   setIsEditing(false);
                   setSelectedItem(null);
+                  setFormData({
+                    name: { en: '', es: '' },
+                    description: { en: '', es: '' },
+                    price: '',
+                    category: '',
+                    isPopular: false,
+                    isVegetarian: false,
+                    ingredients: [],
+                  });
                 }}
                 className="px-4 py-2 border border-gray-300 rounded text-gray-700"
               >
                 Cancelar
               </button>
               <button
-                onClick={() => {
-                  setIsEditing(false);
-                  setSelectedItem(null);
-                }}
-                className="px-4 py-2 bg-peru-red text-white rounded"
+                onClick={() => selectedItem 
+                  ? handleUpdateItem(selectedItem.id, formData)
+                  : handleAddItem()
+                }
+                className="px-4 py-2 bg-peru-red text-white rounded hover:bg-peru-terracotta transition-colors"
               >
-                Guardar
+                {selectedItem ? 'Actualizar' : 'Añadir'}
               </button>
             </div>
           </div>
