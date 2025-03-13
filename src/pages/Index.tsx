@@ -4,14 +4,40 @@ import Navbar from '@/components/Navbar';
 import MenuFilter from '@/components/MenuFilter';
 import MenuSection from '@/components/MenuSection';
 import Footer from '@/components/Footer';
-import { menuItems, categories } from '@/data/menuData';
+import { getMenuItems } from '@/lib/api';
 import { useLanguage } from '@/context/LanguageContext';
+import { MenuItem } from '@/types/menu';
+import { categories } from '@/data/menuData';
+import { Loader2 } from 'lucide-react';
 
 const Index = () => {
   const { language, translate } = useLanguage();
   const [activeCategory, setActiveCategory] = useState('all');
-  const [filteredItems, setFilteredItems] = useState(menuItems);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [filteredItems, setFilteredItems] = useState<MenuItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        setIsLoading(true);
+        const items = await getMenuItems();
+        setMenuItems(items);
+        setFilteredItems(items);
+      } catch (error) {
+        console.error('Error fetching menu:', error);
+      } finally {
+        setIsLoading(false);
+        // Simulate loading animation completion
+        setTimeout(() => {
+          setIsLoaded(true);
+        }, 300);
+      }
+    };
+    
+    fetchMenu();
+  }, []);
 
   useEffect(() => {
     if (activeCategory === 'all') {
@@ -19,16 +45,7 @@ const Index = () => {
     } else {
       setFilteredItems(menuItems.filter(item => item.category === activeCategory));
     }
-  }, [activeCategory]);
-
-  useEffect(() => {
-    // Simulate loading content
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, []);
+  }, [activeCategory, menuItems]);
 
   // Group items by category for displaying
   const getItemsByCategory = (categoryId: string) => {
@@ -76,7 +93,16 @@ const Index = () => {
       
       {/* Menu Content */}
       <div className="flex-1 container mx-auto max-w-6xl px-6 py-8">
-        {activeCategory === 'all' ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center p-12">
+            <Loader2 className="h-8 w-8 text-peru-red animate-spin" />
+            <span className="ml-2 text-peru-brown">Cargando menú...</span>
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="text-center p-12">
+            <p className="text-gray-600">No se encontraron elementos en el menú.</p>
+          </div>
+        ) : activeCategory === 'all' ? (
           // When showing all categories, display each category with its own section
           uniqueCategories.map(categoryId => {
             const items = getItemsByCategory(categoryId);
