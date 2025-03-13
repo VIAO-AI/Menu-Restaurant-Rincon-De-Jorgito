@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -161,24 +160,24 @@ const AdminDashboard = () => {
         throw new Error(language === 'en' ? 'Please fill all required fields' : 'Por favor complete todos los campos obligatorios');
       }
       
-      let imageUrl = null;
+      let finalImageUrl = null;
       
       // Handle image upload or image URL
       if (useImageUrl && imageUrl) {
-        imageUrl = formData.image || this.imageUrl;
+        finalImageUrl = imageUrl;
       } else if (imageFile) {
         setUploadingImage(true);
-        imageUrl = await uploadMenuItemImage(imageFile);
+        finalImageUrl = await uploadMenuItemImage(imageFile);
         setUploadingImage(false);
         
-        if (!imageUrl) {
+        if (!finalImageUrl) {
           throw new Error(language === 'en' ? 'Error uploading image' : 'Error al subir la imagen');
         }
       }
       
       const newItemData = {
         ...formData,
-        image: imageUrl || undefined
+        image: finalImageUrl || undefined
       } as Omit<MenuItem, 'id'>;
       
       const newItem = await addMenuItem(newItemData);
@@ -286,7 +285,6 @@ const AdminDashboard = () => {
     navigate('/admin/login');
   };
 
-  // Get the categorized menu items
   const getCategoryItems = (categoryId: string) => {
     if (categoryId === 'all') {
       return items;
@@ -372,7 +370,6 @@ const AdminDashboard = () => {
           </button>
         </div>
 
-        {/* Category selector */}
         <div className="bg-white rounded-lg p-4 mb-6 shadow-sm">
           <h2 className="text-lg font-medium text-peru-brown mb-3">
             {language === 'en' ? 'Filter by Category' : 'Filtrar por Categoría'}
@@ -414,9 +411,7 @@ const AdminDashboard = () => {
           </div>
         ) : (
           <>
-            {/* Show items by category */}
             {activeCategory === 'all' ? (
-              // Display all categories
               categories.map(category => {
                 const categoryItems = items.filter(item => item.category === category.id);
                 if (categoryItems.length === 0) return null;
@@ -488,7 +483,6 @@ const AdminDashboard = () => {
                 );
               })
             ) : (
-              // Display only selected category
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {getCategoryItems(activeCategory).map((item) => (
                   <div key={item.id} className="bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow">
@@ -552,7 +546,6 @@ const AdminDashboard = () => {
         )}
       </div>
 
-      {/* Modal de edición */}
       {isEditing && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
           <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">

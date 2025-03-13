@@ -5,15 +5,10 @@ serve(async (req) => {
   try {
     const { email } = await req.json()
     
-    // List of allowed admin emails
-    // In a production environment, you would store this in a database table
-    const allowedAdmins = [
-      'admin@example.com',
-      'restaurant@example.com',
-      'manager@example.com'
-    ]
+    // Only allow this specific admin email
+    const allowedAdmin = 'restaurantdejorgitoadm@gmail.com'
     
-    const isAdmin = allowedAdmins.includes(email.toLowerCase())
+    const isAdmin = email.toLowerCase() === allowedAdmin.toLowerCase()
 
     return new Response(
       JSON.stringify({ 

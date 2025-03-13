@@ -34,6 +34,26 @@ serve(async (req) => {
       )
     }
     
+    // Validate updates object isn't empty
+    if (!updates || Object.keys(updates).length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Updates object is empty',
+          message: {
+            en: 'No updates provided',
+            es: 'No se proporcionaron actualizaciones'
+          }
+        }),
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        },
+      )
+    }
+    
+    console.log(`Updating menu item with ID: ${id}`);
+    console.log('Updates:', JSON.stringify(updates));
+    
     const { data, error } = await supabaseClient
       .from('menu_items')
       .update(updates)
@@ -42,6 +62,7 @@ serve(async (req) => {
       .single()
     
     if (error) {
+      console.error('Supabase error:', error);
       throw error
     }
 
@@ -50,6 +71,7 @@ serve(async (req) => {
       { headers: { 'Content-Type': 'application/json' } },
     )
   } catch (error) {
+    console.error('Function error:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
