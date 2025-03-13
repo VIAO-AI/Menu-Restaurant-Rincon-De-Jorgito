@@ -17,6 +17,23 @@ serve(async (req) => {
     
     const { id, updates } = await req.json()
     
+    // Validate that we have the required inputs
+    if (!id) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Missing required field: id',
+          message: {
+            en: 'Item ID is required',
+            es: 'Se requiere el ID del elemento'
+          }
+        }),
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        },
+      )
+    }
+    
     const { data, error } = await supabaseClient
       .from('menu_items')
       .update(updates)
@@ -34,7 +51,13 @@ serve(async (req) => {
     )
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        message: {
+          en: 'Error updating menu item',
+          es: 'Error al actualizar el elemento del menú'
+        }
+      }),
       { 
         status: 400,
         headers: { 'Content-Type': 'application/json' }

@@ -7,10 +7,16 @@ import { useLanguage } from '@/context/LanguageContext';
 interface MenuSectionProps {
   title: string;
   items: MenuItemType[];
+  categoryFilter?: string;
 }
 
-const MenuSection: React.FC<MenuSectionProps> = ({ title, items }) => {
+const MenuSection: React.FC<MenuSectionProps> = ({ title, items, categoryFilter }) => {
   const { translate } = useLanguage();
+  
+  // Filter items by category if categoryFilter is provided
+  const filteredItems = categoryFilter 
+    ? items.filter(item => item.category === categoryFilter)
+    : items;
 
   return (
     <section className="py-8">
@@ -19,7 +25,7 @@ const MenuSection: React.FC<MenuSectionProps> = ({ title, items }) => {
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
-        {items.map((item) => (
+        {filteredItems.map((item) => (
           <MenuItem key={item.id} item={item} />
         ))}
       </div>

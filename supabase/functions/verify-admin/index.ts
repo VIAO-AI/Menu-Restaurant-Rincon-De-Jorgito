@@ -16,12 +16,23 @@ serve(async (req) => {
     const isAdmin = allowedAdmins.includes(email.toLowerCase())
 
     return new Response(
-      JSON.stringify({ isAdmin }),
+      JSON.stringify({ 
+        isAdmin,
+        message: isAdmin 
+          ? { en: 'Admin verified successfully', es: 'Administrador verificado correctamente' }
+          : { en: 'Not authorized', es: 'No autorizado' }
+      }),
       { headers: { 'Content-Type': 'application/json' } },
     )
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        message: { 
+          en: 'Error verifying admin',
+          es: 'Error al verificar administrador'
+        }
+      }),
       { 
         status: 400,
         headers: { 'Content-Type': 'application/json' }
