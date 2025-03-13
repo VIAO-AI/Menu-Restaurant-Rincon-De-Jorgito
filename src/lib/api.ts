@@ -2,30 +2,63 @@
 import { MenuItem } from '@/types/menu';
 import { supabase } from './supabase';
 
-// Menu item CRUD operations
+// Menu item CRUD operations via Edge Functions
 export const getMenuItems = async (): Promise<MenuItem[]> => {
   try {
-    const { data, error } = await supabase
-      .from('menu_items')
-      .select('*');
+    // Fallback to local menuData if Supabase is not properly configured
+    if (!supabase.functions) {
+      console.log("Supabase functions not available, using menuData");
+      const { menuItems } = await import('@/data/menuData');
+      return menuItems as MenuItem[];
+    }
+
+    const { data, error } = await supabase.functions.invoke('get-menu-items');
     
-    if (error) throw error;
+    if (error) {
+      console.error("Edge function error:", error);
+      // Fallback to direct database query
+      const { data: dbData, error: dbError } = await supabase
+        .from('menu_items')
+        .select('*');
+      
+      if (dbError) {
+        console.error("Database query error:", dbError);
+        // Final fallback to menuData
+        const { menuItems } = await import('@/data/menuData');
+        return menuItems as MenuItem[];
+      }
+      
+      return dbData || [];
+    }
+    
     return data || [];
   } catch (error) {
     console.error('Error fetching menu items:', error);
-    return [];
+    // Ultimate fallback to menuData
+    const { menuItems } = await import('@/data/menuData');
+    return menuItems as MenuItem[];
   }
 };
 
 export const addMenuItem = async (item: Omit<MenuItem, 'id'>): Promise<MenuItem | null> => {
   try {
-    const { data, error } = await supabase
-      .from('menu_items')
-      .insert([{ ...item }])
-      .select()
-      .single();
+    const { data, error } = await supabase.functions.invoke('add-menu-item', {
+      body: { item }
+    });
     
-    if (error) throw error;
+    if (error) {
+      console.error("Edge function error:", error);
+      // Fallback to direct database query
+      const { data: dbData, error: dbError } = await supabase
+        .from('menu_items')
+        .insert([{ ...item }])
+        .select()
+        .single();
+      
+      if (dbError) throw dbError;
+      return dbData;
+    }
+    
     return data;
   } catch (error) {
     console.error('Error adding menu item:', error);
@@ -35,14 +68,24 @@ export const addMenuItem = async (item: Omit<MenuItem, 'id'>): Promise<MenuItem 
 
 export const updateMenuItem = async (id: string, updates: Partial<MenuItem>): Promise<MenuItem | null> => {
   try {
-    const { data, error } = await supabase
-      .from('menu_items')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
+    const { data, error } = await supabase.functions.invoke('update-menu-item', {
+      body: { id, updates }
+    });
     
-    if (error) throw error;
+    if (error) {
+      console.error("Edge function error:", error);
+      // Fallback to direct database query
+      const { data: dbData, error: dbError } = await supabase
+        .from('menu_items')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (dbError) throw dbError;
+      return dbData;
+    }
+    
     return data;
   } catch (error) {
     console.error('Error updating menu item:', error);
@@ -52,12 +95,21 @@ export const updateMenuItem = async (id: string, updates: Partial<MenuItem>): Pr
 
 export const deleteMenuItem = async (id: string): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('menu_items')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.functions.invoke('delete-menu-item', {
+      body: { id }
+    });
     
-    if (error) throw error;
+    if (error) {
+      console.error("Edge function error:", error);
+      // Fallback to direct database query
+      const { error: dbError } = await supabase
+        .from('menu_items')
+        .delete()
+        .eq('id', id);
+      
+      if (dbError) throw dbError;
+    }
+    
     return true;
   } catch (error) {
     console.error('Error deleting menu item:', error);
@@ -68,13 +120,22 @@ export const deleteMenuItem = async (id: string): Promise<boolean> => {
 // Admin authentication
 export const verifyAdminEmail = async (email: string): Promise<boolean> => {
   try {
-    // This would typically check against an approved list of admin emails
-    // For now, we'll simply check if the email format is valid and has a specific domain
-    // In a production environment, you would want more robust admin verification
-    return email.includes('@') && email.length > 5;
+    // This could also be moved to an edge function for better security
+    const { data, error } = await supabase.functions.invoke('verify-admin', {
+      body: { email }
+    });
+    
+    if (error) {
+      console.error("Edge function error:", error);
+      // Simple fallback validation
+      return email.includes('@') && email.length > 5;
+    }
+    
+    return data?.isAdmin || false;
   } catch (error) {
     console.error('Error verifying admin email:', error);
-    return false;
+    // Fallback validation if edge function fails
+    return email.includes('@') && email.length > 5;
   }
 };
 

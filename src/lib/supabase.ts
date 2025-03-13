@@ -6,7 +6,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase URL or Anon Key not found in environment variables.');
+  console.warn('Supabase URL or Anon Key not found in environment variables. Using placeholder values for development.');
 }
 
 // Create Supabase client with proper error handling
@@ -34,5 +34,17 @@ export const getCurrentUser = async () => {
   } catch (error) {
     console.error('Get current user error:', error);
     return null;
+  }
+};
+
+// Check if we have a valid Supabase connection
+export const checkSupabaseConnection = async () => {
+  try {
+    // Simple ping to check connection
+    const { data, error } = await supabase.from('menu_items').select('count', { count: 'exact', head: true });
+    return !error;
+  } catch (error) {
+    console.error('Supabase connection check error:', error);
+    return false;
   }
 };

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import MenuItem from './MenuItem';
-import { MenuItem as MenuItemType } from '@/data/menuData';
+import { MenuItem as MenuItemType } from '@/types/menu';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface MenuSectionProps {
