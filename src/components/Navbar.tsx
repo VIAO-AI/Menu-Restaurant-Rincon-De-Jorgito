@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { Link } from 'react-router-dom';
@@ -16,15 +15,8 @@ const Navbar: React.FC = () => {
           <span className="font-title text-2xl font-bold text-peru-brown">{translate('appName')}</span>
         </div>
         
-        <div className="flex items-center space-x-6">
-          <a href="#" className="text-peru-brown hover:text-peru-red transition-colors duration-300">
-            {translate('about')}
-          </a>
-          <a href="#" className="text-peru-brown hover:text-peru-red transition-colors duration-300">
-            {translate('contact')}
-          </a>
-          
-          <div className="flex items-center space-x-4 ml-4">
+        <div className="flex items-center">
+          <div className="flex items-center space-x-4">
             <button
               onClick={() => setLanguage('en')}
               className={`language-toggle text-sm font-medium ${language === 'en' ? 'text-peru-red active' : 'text-peru-brown'}`}
@@ -39,10 +31,6 @@ const Navbar: React.FC = () => {
               {translate('spanish')}
             </button>
           </div>
-          
-          <Link to="/admin" className="ml-4 text-sm text-peru-brown hover:text-peru-red transition-colors duration-300">
-            Admin
-          </Link>
         </div>
       </div>
     </nav>

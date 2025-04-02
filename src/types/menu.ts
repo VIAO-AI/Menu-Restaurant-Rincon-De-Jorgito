@@ -13,6 +13,8 @@ export interface MenuItem {
   category: string;
   isPopular?: boolean;
   isVegetarian?: boolean;
+  isVegan?: boolean;
+  isSpicy?: boolean;
   ingredients?: string[];
   image?: string;
 }
